@@ -4,6 +4,8 @@ import Head from 'next/head';
 import Image from 'next/image';
 import React from 'react';
 import styles from '../styles/Home.module.css';
+import {IdentityButton} from "@civic/common-gateway-react";
+import {useWallet} from "@solana/wallet-adapter-react";
 
 const WalletDisconnectButtonDynamic = dynamic(
     async () => (await import('@solana/wallet-adapter-react-ui')).WalletDisconnectButton,
@@ -15,6 +17,7 @@ const WalletMultiButtonDynamic = dynamic(
 );
 
 const Home: NextPage = () => {
+    const wallet = useWallet();
     return (
         <div className={styles.container}>
             <Head>
@@ -33,9 +36,7 @@ const Home: NextPage = () => {
                     <WalletDisconnectButtonDynamic />
                 </div>
 
-                <p className={styles.description}>
-                    Get started by editing <code className={styles.code}>pages/index.tsx</code>
-                </p>
+                {wallet.connected && <IdentityButton />}
 
                 <div className={styles.grid}>
                     <a href="https://nextjs.org/docs" className={styles.card}>

@@ -1,15 +1,28 @@
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import {ConnectionProvider, useConnection, useWallet, WalletProvider} from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { clusterApiUrl } from '@solana/web3.js';
+import {PhantomWalletAdapter, SolflareWalletAdapter, UnsafeBurnerWalletAdapter} from '@solana/wallet-adapter-wallets';
+import {clusterApiUrl, PublicKey} from '@solana/web3.js';
 import type { AppProps } from 'next/app';
 import type { FC } from 'react';
 import React, { useMemo } from 'react';
+import {GatewayProvider} from "@civic/solana-gateway-react";
 
 // Use require instead of import since order matters
 require('@solana/wallet-adapter-react-ui/styles.css');
 require('../styles/globals.css');
+
+const GATEKEEPER_NETWORK = "ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6";
+const CLUSTER = WalletAdapterNetwork.Devnet;
+const Gateway: FC<{
+    children?: React.ReactNode
+}> = ({ children }) => {
+    const { connection } = useConnection();
+    const wallet = useWallet();
+    return <GatewayProvider connection={connection} wallet={wallet} cluster={CLUSTER} gatekeeperNetwork={new PublicKey(GATEKEEPER_NETWORK)}>
+        { children }
+    </GatewayProvider>
+}
 
 const App: FC<AppProps> = ({ Component, pageProps }) => {
     // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
@@ -32,6 +45,8 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
              * instantiate its legacy wallet adapter here. Common legacy adapters can be found
              * in the npm package `@solana/wallet-adapter-wallets`.
              */
+            new SolflareWalletAdapter({ network }),
+            new PhantomWalletAdapter(),
             new UnsafeBurnerWalletAdapter(),
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,7 +57,9 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
         <ConnectionProvider endpoint={endpoint}>
             <WalletProvider wallets={wallets} autoConnect>
                 <WalletModalProvider>
-                    <Component {...pageProps} />
+                    <Gateway>
+                        <Component {...pageProps} />
+                    </Gateway>
                 </WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>
